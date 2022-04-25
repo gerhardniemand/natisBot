@@ -41,8 +41,6 @@ class PollLicenseStatusCommand extends Command
     protected function configure()
     {
         $this->setName('poll:natis:license_status')
-            ->addOption('username', null, InputOption::VALUE_REQUIRED, 'Username to log into Natis with')
-            ->addOption('password', null, InputOption::VALUE_REQUIRED, 'Password to log into Natis with')
             ->setDescription('A command to check natis online system for the status of your license');
     }
 
