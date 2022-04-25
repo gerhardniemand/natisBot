@@ -1,0 +1,38 @@
+{
+    "name": "gerhardn/natis-bot",
+    "description": "A bot to check the delivery status of my license at Natis and send the result to a telegram channel",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Gerhardn\\NatisBot\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Gerhard Niemand",
+            "email": "gerhard.n@afrihost.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "symfony/console": "^5.4",
+        "guzzlehttp/guzzle": "^7.4",
+        "symfony/var-dumper": "^5.4",
+        "symfony/yaml": "^5.4",
+        "incenteev/composer-parameter-handler": "^2.1"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ],
+        "post-update-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ]
+    },
+    "extra": {
+        "incenteev-parameters": {
+            "file": "parameters.yml"
+        }
+    }
+
+}

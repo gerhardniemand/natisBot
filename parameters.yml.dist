@@ -1,0 +1,5 @@
+parameters:
+  natis_username: obviouslyNotARealUsername
+  natis_password: obviouslyNotARealPassword
+  telegram_api_key: obviouslyNotARealAPIKey
+  telegram_chat_id: NotARealChatID
