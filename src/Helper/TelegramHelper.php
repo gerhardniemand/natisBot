@@ -23,7 +23,8 @@ class TelegramHelper
             "https://api.telegram.org/bot{$this->getParameterLoader()->get('telegram_api_key')}/sendMessage",
             [RequestOptions::JSON => [
                 'chat_id' => $this->getParameterLoader()->get('telegram_chat_id'),
-                'text' => $message
+                'text' => $message,
+                'parse_mode' => 'MarkdownV2'
                 ]
             ]
         );

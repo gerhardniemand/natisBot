@@ -19,10 +19,10 @@ class PollLicenseStatusCommand extends Command
     public static $enatisStatusArray = [
         "01" => "INITIATED",
         "02" => "ORDERED",
-        "03" => "DETAILS RECEIVED BY CPF",
-        "04" => "PHOTO MERGED",
-        "05" => "PERSONALISED",
-        "06" => "DISPATCHED BY CPF",
+        "03" => "Production Pending",
+        "04" => "In Production",
+        "05" => "Produced - Pending Dispatch",
+        "06" => "On Route to Testing Station",
         "07" => "MISPRINTED",
         "08" => "MISPRINTED - SUPERSEDED",
         "09" => "Ready For Collection",
@@ -47,41 +47,44 @@ class PollLicenseStatusCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $parameterLoader = new ParameterLoader();
-        $jar = new SessionCookieJar('PHPSESSID', true);
-        $client = new Client(['cookies' => $jar]);
 
-        $response = $client->post(
-            'https://oauth.natis.gov.za/rtmc-jwt-auth/auth/login',
-            [RequestOptions::JSON => ['username' => $parameterLoader->get('natis_username'), 'password' => $parameterLoader->get('natis_password')]]
-        );
+        foreach ($parameterLoader->get('natis_details') as $key => $detail) {
+            $jar = new SessionCookieJar('PHPSESSID', true);
+            $client = new Client(['cookies' => $jar]);
 
-        $token = $response->getHeader('token');
-        $responseArray = json_decode($response->getBody()->getContents(), true);
-        $licenseNumber = $responseArray['attributes']['ownerPer'];
+            $response = $client->post(
+                'https://oauth.natis.gov.za/rtmc-jwt-auth/auth/login',
+                [RequestOptions::JSON => ['username' => $detail['natis_username'], 'password' => $detail['natis_password']]]
+            );
 
-        $licenseReponse = $client->get(
-            'https://online.natis.gov.za/vehicle-renewal-service/bookings/combined/',
-            [
-                RequestOptions::HEADERS => [
-                    'token' => $token,
-                    'peridn' => $licenseNumber
+            $token = $response->getHeader('token');
+            $responseArray = json_decode($response->getBody()->getContents(), true);
+            $licenseNumber = $responseArray['attributes']['ownerPer'];
+
+            $licenseReponse = $client->get(
+                'https://online.natis.gov.za/vehicle-renewal-service/bookings/combined/',
+                [
+                    RequestOptions::HEADERS => [
+                        'token' => $token,
+                        'peridn' => $licenseNumber
+                    ]
                 ]
-            ]
-        );
+            );
 
-        $licenseCardQueryResponseArray = json_decode($licenseReponse->getBody()->getContents(), true);
+            $licenseCardQueryResponseArray = json_decode($licenseReponse->getBody()->getContents(), true);
 
-        if(!isset($licenseCardQueryResponseArray['liccardInfo'])) {
-            throw new \Exception("Looks like NATIS has no record of you ordering a card");
+            if (!isset($licenseCardQueryResponseArray['liccardInfo'])) {
+                throw new \Exception("Looks like NATIS has no record of you ordering a card");
+            }
+
+            $licenseCardStat = $licenseCardQueryResponseArray['liccardInfo']['cardstat'];
+
+            $message = "{$key} your drivers license card status is *" . self::$enatisStatusArray[$licenseCardStat]."*";
+            $output->writeln($message);
+
+            $telegramHelper = new TelegramHelper();
+            $telegramHelper->sendMessage($message);
         }
-
-        $licenseCardStat = $licenseCardQueryResponseArray['liccardInfo']['cardstat'];
-
-        $message = 'Your drivers license card is '.self::$enatisStatusArray[$licenseCardStat];
-        $output->writeln($message);
-
-        $telegramHelper = new TelegramHelper();
-        $telegramHelper->sendMessage($message);
 
 
 
